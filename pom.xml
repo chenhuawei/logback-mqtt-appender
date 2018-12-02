@@ -4,7 +4,7 @@
 
   <groupId>com.github.pisatoshi.logback</groupId>
   <artifactId>logback-mqtt-appender</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>logback-mqtt-appender</name>
@@ -12,6 +12,32 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+
+    <repositories>
+        <repository>
+            <id>shbluehour-public</id>
+            <name>Blue Hour Repositories</name>
+            <url>http://nexus.chenxu.biz/repository/shbluehour-public/</url>
+        </repository>
+        <repository>
+            <id>paho-mqtt-client</id>
+            <name>Paho MQTT Client</name>
+            <url>https://repo.eclipse.org/content/repositories/paho-releases/</url>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>shbluehour-snapshots</id>
+            <name>Blue Hour Snapshots</name>
+            <url>http://nexus.chenxu.biz/repository/shbluehour-snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>shbluehour-releases</id>
+            <name>Blue Hour Releases</name>
+            <url>http://nexus.chenxu.biz/repository/shbluehour-releases/</url>
+        </repository>
+    </distributionManagement>
 
   <dependencies>
     <dependency>
@@ -23,32 +49,54 @@
     <dependency>
 	<groupId>ch.qos.logback</groupId>
 	<artifactId>logback-classic</artifactId>
-	<version>1.0.7</version>
+	<version>1.2.3</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.paho</groupId>
-      <artifactId>mqtt-client</artifactId>
-      <version>0.4.0</version>
+      <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+      <version>1.2.0</version>
     </dependency>
   </dependencies>
-  <repositories>
-    <repository>
-      <id>paho-mqtt-client</id>
-      <name>Paho MQTT Client</name>
-      <url>https://repo.eclipse.org/content/repositories/paho-releases/</url>
-    </repository>
-  </repositories>
   <build>
+      <pluginManagement>
+          <plugins>
+              <plugin>
+                  <groupId>org.codehaus.mojo</groupId>
+                  <artifactId>versions-maven-plugin</artifactId>
+                  <version>2.7</version>
+              </plugin>
+
+          </plugins>
+      </pluginManagement>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.0</version>
-        <configuration>
-          <source>1.7</source>
-          <target>1.7</target>
-        </configuration>
-      </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.1</version>
+            <configuration>
+                <source>1.8</source>
+                <target>1.8</target>
+            </configuration>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>2.4</version>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>jar-no-fork</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+
+        <!-- To use the plugin goals in your POM or parent POM -->
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>versions-maven-plugin</artifactId>
+        </plugin>
     </plugins>
   </build>
 </project>

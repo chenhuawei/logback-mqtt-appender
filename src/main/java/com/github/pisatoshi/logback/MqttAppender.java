@@ -1,37 +1,40 @@
 package com.github.pisatoshi.logback;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import ch.qos.logback.classic.spi.LoggingEvent;
-import ch.qos.logback.core.UnsynchronizedAppenderBase;
+import java.util.UUID;
 
-public class MqttAppender extends UnsynchronizedAppenderBase<LoggingEvent> {
-
-    private static final String MQTT_URL = "tcp://localhost:61613";
-    private static final String MQTT_CLIENT_ID = "logmqtt";
-    private static final String MQTT_CHANNEL = "mqttlogger";
-    private static final String MQTT_USER = "admin";
-    private static final String MQTT_PASSWORD = "password";
+public class MqttAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
 
     private InternalMqttClient client;
 
+    private String host = "tcp://localhost:1883";
+    private String clientId;
+    private String topic = "logback";
+    private String username;
+    private String password;
+
     public MqttAppender() {
+        super();
     }
 
     @Override
     public void start() {
         super.start();
         try {
-            client = new InternalMqttClient(MQTT_URL, MQTT_CLIENT_ID);
+            if (isBlank(clientId)) {
+                clientId = UUID.randomUUID().toString();
+            }
+            client = new InternalMqttClient(host, clientId);
             MqttConnectOptions options = new MqttConnectOptions();
-            options.setUserName(MQTT_USER);
-            options.setPassword(MQTT_PASSWORD.toCharArray());
+            if (isNotBlank(username) && isNotBlank(password)) {
+                options.setUserName(username);
+                options.setPassword(password.toCharArray());
+            }
             client.setCallback(client);
             client.connect(options);
         } catch (MqttException e) {
@@ -50,33 +53,76 @@ public class MqttAppender extends UnsynchronizedAppenderBase<LoggingEvent> {
     }
 
     @Override
-    protected void append(LoggingEvent event) {
+    protected void append(ILoggingEvent event) {
         String json = format(event);
         MqttMessage message = new MqttMessage();
         message.setQos(0);
         message.setPayload(json.getBytes());
         try {
-            client.publish(MQTT_CHANNEL, message);
+            client.publish(topic, message);
         } catch (MqttException e) {
             e.printStackTrace();
         }
     }
 
-    private final int DEFAULT_BUFFER_SIZE = 512;
-    private DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SZ");
+    public String getHost() {
+        return host;
+    }
 
-    private String format(LoggingEvent event) {
-        StringBuilder buf = new StringBuilder(DEFAULT_BUFFER_SIZE);
+    public void setHost(String host) {
+        this.host = host;
+    }
 
-        buf.append(event.getFormattedMessage());
-        buf.append("\t");
-        buf.append(df.format(new Date(event.getTimeStamp())));
-        buf.append("\t");
-        buf.append(event.getLoggerName());
-        buf.append("\t");
-        buf.append(event.getThreadName());
-        buf.append("\t");
-        buf.append(event.getLevel().toString());
-        return buf.toString();
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    private String format(ILoggingEvent event) {
+        return String.format("{" +
+                    "\"clientId\":\"%s\", " +
+                    "\"level\":\"%s\", " +
+                    "\"timestamp\": %d, " +
+                    "\"logger\": \"%s\", " +
+                    "\"thread\": \"%s\", " +
+                    "\"message\": \"%s\"" +
+                "}", clientId, event.getLevel().toString(), event.getTimeStamp(), event.getLoggerName(),
+                event.getThreadName(),
+                event.getFormattedMessage());
+    }
+
+    private boolean isBlank(String str) {
+        return str == null || str.isEmpty() || str.trim().isEmpty();
+    }
+
+    private boolean isNotBlank(String str) {
+        return !isBlank(str);
     }
 }
