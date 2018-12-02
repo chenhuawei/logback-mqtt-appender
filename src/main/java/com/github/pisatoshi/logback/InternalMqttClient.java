@@ -1,19 +1,13 @@
 package com.github.pisatoshi.logback;
 
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttClientPersistence;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
-import org.eclipse.paho.client.mqttv3.persist.MqttDefaultFilePersistence;
+import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 public class InternalMqttClient extends MqttClient implements MqttCallback {
     private MqttClientPersistence clientPersistence;
 
     public InternalMqttClient(String serverURI, String clientId) throws MqttException {
-        this(serverURI,clientId, new MqttDefaultFilePersistence());
+        this(serverURI,clientId, new MemoryPersistence());
     }
 
     public InternalMqttClient(String serverURI, String clientId, MqttClientPersistence persistence) throws MqttException {
