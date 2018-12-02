@@ -1,14 +1,15 @@
 package com.github.pisatoshi.logback;
 
-import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.util.UUID;
 
-public class MqttAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
+public class MqttAppender<E> extends UnsynchronizedAppenderBase<E> {
 
     private InternalMqttClient client;
 
@@ -17,6 +18,8 @@ public class MqttAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     private String topic = "logback";
     private String username;
     private String password;
+
+    private Layout<E> layout;
 
     public MqttAppender() {
         super();
@@ -36,7 +39,11 @@ public class MqttAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
                 options.setPassword(password.toCharArray());
             }
             client.setCallback(client);
-            client.connect(options);
+            IMqttToken token = client.connectWithResult(options);
+            Exception e = token.getException();
+            if (e != null) {
+                e.printStackTrace();
+            }
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -53,7 +60,7 @@ public class MqttAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
     }
 
     @Override
-    protected void append(ILoggingEvent event) {
+    protected void append(E event) {
         String json = format(event);
         MqttMessage message = new MqttMessage();
         message.setQos(0);
@@ -105,17 +112,16 @@ public class MqttAppender extends UnsynchronizedAppenderBase<ILoggingEvent> {
         this.password = password;
     }
 
-    private String format(ILoggingEvent event) {
-        return String.format("{" +
-                    "\"clientId\":\"%s\", " +
-                    "\"level\":\"%s\", " +
-                    "\"timestamp\": %d, " +
-                    "\"logger\": \"%s\", " +
-                    "\"thread\": \"%s\", " +
-                    "\"message\": \"%s\"" +
-                "}", clientId, event.getLevel().toString(), event.getTimeStamp(), event.getLoggerName(),
-                event.getThreadName(),
-                event.getFormattedMessage());
+    public Layout<E> getLayout() {
+        return layout;
+    }
+
+    public void setLayout(Layout<E> layout) {
+        this.layout = layout;
+    }
+
+    private String format(E e) {
+        return layout.doLayout(e);
     }
 
     private boolean isBlank(String str) {
