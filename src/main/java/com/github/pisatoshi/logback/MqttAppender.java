@@ -2,12 +2,7 @@ package com.github.pisatoshi.logback;
 
 import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-
-import java.util.UUID;
+import org.eclipse.paho.client.mqttv3.*;
 
 public class MqttAppender<E> extends UnsynchronizedAppenderBase<E> {
 
@@ -30,7 +25,7 @@ public class MqttAppender<E> extends UnsynchronizedAppenderBase<E> {
         super.start();
         try {
             if (isBlank(clientId)) {
-                clientId = UUID.randomUUID().toString();
+                clientId = MqttClient.generateClientId();
             }
             client = new InternalMqttClient(host, clientId);
             MqttConnectOptions options = new MqttConnectOptions();
@@ -38,6 +33,7 @@ public class MqttAppender<E> extends UnsynchronizedAppenderBase<E> {
                 options.setUserName(username);
                 options.setPassword(password.toCharArray());
             }
+            options.setAutomaticReconnect(true);
             client.setCallback(client);
             IMqttToken token = client.connectWithResult(options);
             Exception e = token.getException();
