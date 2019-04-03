@@ -16,13 +16,14 @@ public class InternalMqttClient extends MqttClient implements MqttCallback {
     }
 
     @Override
-    public void disconnect() throws MqttPersistenceException {
+    public void disconnect() throws MqttException {
         clientPersistence.close();
+        super.disconnect();
     }
 
     @Override
     public void connectionLost(Throwable cause) {
-        // TODO reconnect
+        cause.printStackTrace();
     }
 
     @Override
